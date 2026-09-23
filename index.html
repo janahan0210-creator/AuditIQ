@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AuditIQ — Continuous Audit Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  /* ---------- Theme tokens (light default, dark via viewer setting or toggle) ---------- */
+  :root{
+    color-scheme:light;
+    --bg:#F3F5F8; --panel:#FFFFFF; --panel-2:#F0F3F7; --border:#D8DFE7; --border-soft:#E7EBF0;
+    --text-primary:#14202B; --text-secondary:#4E6072; --text-muted:#7A8B9C;
+    --teal:#0E8C72; --teal-dim:#DCF2EB; --amber:#98630A; --amber-dim:#FAEFD6;
+    --coral:#C13B26; --coral-dim:#FBE2DD; --blue:#2C5FCF; --blue-dim:#E0E9FB;
+    --on-coral:#FFFFFF;
+    --inc-fg:#2C5FCF; --sr-bg:#E1F1E5; --sr-fg:#2F7A43; --cr-fg:#98630A;
+    --font-serif:'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --font-sans:'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --bg:#0F1720; --panel:#141F29; --panel-2:#182531; --border:#26333F; --border-soft:#1D2933;
+      --text-primary:#E8EEF3; --text-secondary:#8FA3B3; --text-muted:#5E7183;
+      --teal:#2FBF9F; --teal-dim:#173A34; --amber:#E0A030; --amber-dim:#3A2E14;
+      --coral:#E0604A; --coral-dim:#3A1E17; --blue:#5B8DEF; --blue-dim:#182A44;
+      --on-coral:#1A0D0A;
+      --inc-fg:#9BBBF7; --sr-bg:#1E2E22; --sr-fg:#8FCB9D; --cr-fg:#F0C575;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#0F1720; --panel:#141F29; --panel-2:#182531; --border:#26333F; --border-soft:#1D2933;
+    --text-primary:#E8EEF3; --text-secondary:#8FA3B3; --text-muted:#5E7183;
+    --teal:#2FBF9F; --teal-dim:#173A34; --amber:#E0A030; --amber-dim:#3A2E14;
+    --coral:#E0604A; --coral-dim:#3A1E17; --blue:#5B8DEF; --blue-dim:#182A44;
+    --on-coral:#1A0D0A;
+    --inc-fg:#9BBBF7; --sr-bg:#1E2E22; --sr-fg:#8FCB9D; --cr-fg:#F0C575;
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text-primary); font-family:var(--font-sans); font-size:14px; line-height:1.5; min-height:100vh;}
+  h1,h2,h3,h4,p{margin:0;}
+  button{font-family:inherit; font-size:inherit; color:inherit; cursor:pointer;}
+  .mono{font-family:var(--font-mono);}
+  .muted{color:var(--text-secondary);}
+  ::-webkit-scrollbar{width:8px; height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);}
+  ::-webkit-scrollbar-track{background:transparent;}
+
+  /* ---------- Shell ---------- */
+  .shell{display:grid; grid-template-columns:244px minmax(0,1fr); min-height:100vh;}
+  .sidebar{position:sticky; top:env(safe-area-inset-top,0px); align-self:start; height:100vh; overflow-y:auto; background:var(--panel); border-right:1px solid var(--border); padding:22px 14px; display:flex; flex-direction:column;}
+  .brand{padding:0 8px 4px;}
+  .brand h1{font-family:var(--font-serif); font-weight:600; font-size:25px; letter-spacing:.2px; display:flex; align-items:center; gap:9px;}
+  .brand h1 i{width:9px; height:9px; border-radius:50%; background:var(--teal); box-shadow:0 0 0 3px var(--teal-dim); display:inline-block;}
+  .brand small{display:block; margin-top:2px; font-size:12px; color:var(--text-secondary);}
+  .mode-pill{margin:14px 8px 18px; font-size:11px; color:var(--amber); background:var(--amber-dim); padding:4px 9px; align-self:flex-start; font-family:var(--font-mono);}
+  .nav-title{font-size:11px; letter-spacing:.09em; color:var(--text-muted); padding:0 10px 8px;}
+  .nav{display:flex; flex-direction:column; gap:2px;}
+  .nav-item{display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:none; border:0; border-left:2px solid transparent; padding:9px 10px; color:var(--text-secondary);}
+  .nav-item:hover{background:var(--panel-2); color:var(--text-primary);}
+  .nav-item.active{background:var(--blue-dim); color:var(--text-primary); border-left-color:var(--blue);}
+  .nav-icon{width:18px; text-align:center; opacity:.85;}
+  .nav-badge{margin-left:auto; font-family:var(--font-mono); font-size:11px; background:var(--amber-dim); color:var(--amber); padding:0 6px;}
+  .sidebar-foot{margin-top:auto; padding:18px 8px 0; font-size:12px; color:var(--text-secondary);}
+  .sidebar-foot .ver{margin-top:6px; color:var(--text-muted); font-size:11px;}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--teal); box-shadow:0 0 0 3px var(--teal-dim); display:inline-block; margin-right:8px;}
+  .dot.off{background:var(--text-muted); box-shadow:0 0 0 3px var(--border-soft);}
+
+  .main{min-width:0;}
+  .topbar{display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; padding:24px 28px 16px; border-bottom:1px solid var(--border);}
+  .eyebrow{font-size:11px; letter-spacing:.09em; color:var(--text-muted); text-transform:uppercase;}
+  .topbar h2{font-family:var(--font-serif); font-weight:600; font-size:27px; margin-top:2px;}
+  .top-actions{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .live-pill{display:flex; align-items:center; background:none; border:1px solid var(--border); padding:6px 11px; font-size:12px; color:var(--text-secondary);}
+  .live-pill:hover{background:var(--panel-2);}
+  .user{display:flex; align-items:center; gap:10px; font-size:12px;}
+  .user strong{display:block; font-weight:500; font-size:13px;}
+  .user span{color:var(--text-secondary);}
+  .avatar{width:32px; height:32px; border-radius:50%; background:var(--blue-dim); color:var(--blue); display:grid; place-items:center; font-weight:600; font-size:12px;}
+  .content{padding:24px 28px 56px; max-width:1360px;}
+  .stack{display:flex; flex-direction:column; gap:22px;}
+
+  /* ---------- Generic pieces ---------- */
+  .btn{background:var(--panel-2); border:1px solid var(--border); padding:7px 13px; color:var(--text-primary);}
+  .btn:hover{border-color:var(--text-muted);}
+  .btn.primary{background:var(--blue); border-color:var(--blue); color:#fff;}
+  .btn.primary:hover{filter:brightness(1.08);}
+  .btn.sm{padding:4px 10px; font-size:12px;}
+  .link{background:none; border:0; padding:0; color:var(--blue); font-family:var(--font-mono); font-size:13px; text-decoration:none;}
+  .link:hover{text-decoration:underline;}
+  .link.sm{font-family:var(--font-sans); font-size:12px; margin-top:6px;}
+  .card,.panel{background:var(--panel); border:1px solid var(--border);}
+  .card{padding:18px 20px;}
+  .card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px;}
+  .card h3,.section-head h3{font-family:var(--font-serif); font-weight:600; font-size:18px;}
+  .card-head p{font-size:12px; color:var(--text-secondary); margin-top:2px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  .pill{display:inline-block; font-family:var(--font-mono); font-size:11px; letter-spacing:.05em; padding:3px 9px;}
+  .pill.blue{background:var(--blue-dim); color:var(--blue);}
+  .pill.purple{background:var(--blue-dim); color:var(--blue);}
+  .pill.gold{background:var(--amber-dim); color:var(--amber);}
+  .pill.green{background:var(--teal-dim); color:var(--teal);}
+  .tag{display:inline-block; font-family:var(--font-mono); font-size:11px; padding:2px 8px; letter-spacing:.02em; white-space:nowrap;}
+  .tag.pass,.tag.low{background:var(--teal-dim); color:var(--teal);}
+  .tag.review,.tag.high{background:var(--amber-dim); color:var(--amber);}
+  .tag.fail{background:var(--coral-dim); color:var(--coral);}
+  .tag.medium{background:var(--blue-dim); color:var(--blue);}
+  .tag.critical{background:var(--coral); color:var(--on-coral);}
+  .type-badge,.type-chip{font-size:11px; padding:2px 7px; text-align:center; font-family:var(--font-mono); display:inline-block;}
+  .type-inc{background:var(--blue-dim); color:var(--inc-fg);}
+  .type-sr{background:var(--sr-bg); color:var(--sr-fg);}
+  .type-cr{background:var(--amber-dim); color:var(--cr-fg);}
+  .type-chip.large{font-size:13px; padding:3px 10px;}
+  .empty{padding:18px; text-align:center; color:var(--text-secondary); font-size:13px; border:1px dashed var(--border);}
+  .section-head{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap;}
+  .section-head small{color:var(--text-secondary); font-size:12px;}
+  .page-intro{display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap;}
+  .page-intro h2{font-family:var(--font-serif); font-size:24px; font-weight:600; margin:8px 0 4px; max-width:720px;}
+  .page-intro p{color:var(--text-secondary); max-width:720px;}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; font-weight:500; font-size:12px; color:var(--text-secondary); padding:10px 14px; border-bottom:1px solid var(--border); white-space:nowrap;}
+  td{padding:11px 14px; border-bottom:1px solid var(--border-soft); vertical-align:middle;}
+  td small{display:block; color:var(--text-secondary); font-size:12px;}
+  tbody tr:hover{background:var(--panel-2);}
+  .table-card{padding:0;}
+  .table-card .card-head{padding:16px 20px 0;}
+
+  /* ---------- KPIs ---------- */
+  .kpi-row{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); border:1px solid var(--border);}
+  .kpi-row + .kpi-row{margin-top:-1px;}
+  .kpi{background:var(--panel); padding:16px 18px;}
+  .kpi .label{font-size:12px; color:var(--text-secondary); margin-bottom:8px;}
+  .kpi .value{font-family:var(--font-serif); font-size:28px; font-weight:600;}
+  .kpi .value small{font-family:var(--font-sans); font-size:14px; color:var(--text-secondary); font-weight:400; margin-left:4px;}
+  .kpi .delta{font-size:12px; margin-top:6px; color:var(--teal);}
+  .kpi .delta.warn{color:var(--amber);}
+  .kpi .delta.mute{color:var(--text-muted);}
+
+  /* ---------- Dashboard ---------- */
+  .hero{display:flex; justify-content:space-between; align-items:center; gap:24px; flex-wrap:wrap; padding:24px 26px; background:linear-gradient(120deg,var(--blue-dim),var(--panel) 70%); border:1px solid var(--border);}
+  .hero h2{font-family:var(--font-serif); font-size:25px; font-weight:600; margin:10px 0 6px; max-width:620px;}
+  .hero p{color:var(--text-secondary); max-width:600px;}
+  .flow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px;}
+  .flow span{background:var(--panel); border:1px solid var(--border); padding:6px 11px;}
+  .flow b{color:var(--text-muted); font-weight:400;}
+  .chart-wrap{padding:0;}
+  .canvas-box{position:relative; height:230px;}
+  .legend{display:flex; gap:16px; margin-top:12px; font-size:11px; color:var(--text-secondary); flex-wrap:wrap;}
+  .legend span{display:flex; align-items:center; gap:5px;}
+  .sw{width:9px; height:9px; display:inline-block;}
+  .alert-row{display:flex; gap:12px; align-items:flex-start; padding:12px 0; border-top:1px solid var(--border-soft); cursor:pointer;}
+  .alert-row:first-of-type{border-top:0;}
+  .alert-row:hover{background:var(--panel-2);}
+  .alert-icon{width:26px; height:26px; flex:0 0 26px; border-radius:50%; display:grid; place-items:center; font-weight:600; font-size:13px; background:var(--amber-dim); color:var(--amber);}
+  .alert-icon.critical,.alert-icon.fail{background:var(--coral-dim); color:var(--coral);}
+  .alert-main{flex:1; min-width:0;}
+  .alert-main strong{font-family:var(--font-mono); font-size:13px; margin-right:8px;}
+  .alert-main p{font-size:13px; color:var(--text-secondary); margin-top:3px;}
+  .alert-main small{color:var(--text-muted); font-size:11px;}
+  .chev{color:var(--text-muted); font-size:18px;}
+  .lifecycle{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .life-step{display:flex; gap:10px; align-items:center; padding:9px 11px; background:var(--panel-2);}
+  .life-step > span{font-family:var(--font-mono); font-size:12px; color:var(--blue);}
+  .life-step strong{display:block; font-size:13px; font-weight:500;}
+  .life-step small{color:var(--text-secondary); font-size:11px;}
+  .before-after{display:grid; grid-template-columns:1fr 1px 1fr; gap:24px;}
+  .before-after label{font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; color:var(--text-muted); display:block; margin-bottom:8px;}
+  .before-after .after label{color:var(--teal);}
+  .ba-divider{background:var(--border);}
+  .ba-row{display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:8px; flex-wrap:wrap;}
+  .ba-row b{color:var(--text-muted); font-weight:400;}
+  .ba-row span{background:var(--panel-2); padding:4px 10px;}
+
+  /* ---------- Monitoring ---------- */
+  .monitor-badge{display:flex; align-items:center; font-size:12px; color:var(--teal); border:1px solid var(--border); padding:6px 12px; background:var(--panel);}
+  .monitor-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:16px;}
+  .monitor-card{background:var(--panel); border:1px solid var(--border); padding:16px 18px; display:flex; flex-direction:column; gap:8px;}
+  .monitor-top{display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted);}
+  .monitor-card h3{font-family:var(--font-mono); font-size:16px; font-weight:500;}
+  .monitor-card p{font-size:13px; color:var(--text-secondary);}
+  .action-box{background:var(--panel-2); border-left:2px solid var(--blue); padding:8px 11px; margin-top:auto;}
+  .action-box span{display:block; font-size:11px; color:var(--text-muted);}
+  .action-box strong{font-weight:500; font-size:13px;}
+  .proactive{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px; font-size:12px;}
+  .proactive span{background:var(--panel-2); padding:6px 11px;}
+  .proactive b{color:var(--text-muted); font-weight:400;}
+  .main-grid{display:grid; grid-template-columns:1.15fr 1fr; gap:20px; align-items:start;}
+  .panel-head{padding:12px 16px; border-bottom:1px solid var(--border); font-size:13px; color:var(--text-secondary); display:flex; justify-content:space-between; align-items:center; gap:10px;}
+  .stream{max-height:520px; overflow-y:auto;}
+  .row{display:grid; grid-template-columns:96px 46px 1fr 40px 66px; gap:10px; align-items:center; padding:11px 16px; border-bottom:1px solid var(--border-soft); cursor:pointer; font-size:13px;}
+  .row:hover{background:var(--panel-2);}
+  .row.selected{background:var(--blue-dim); border-left:2px solid var(--blue); padding-left:14px;}
+  .row .id{font-family:var(--font-mono); font-size:12px; color:var(--text-secondary);}
+  .row .cat{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .row .score{font-family:var(--font-mono); text-align:right;}
+  .status-chip{font-size:11px; padding:3px 6px; text-align:center; font-family:var(--font-mono);}
+  .status-pass{background:var(--teal-dim); color:var(--teal);}
+  .status-review{background:var(--amber-dim); color:var(--amber);}
+  .status-fail{background:var(--coral-dim); color:var(--coral);}
+  .detail{padding:16px;}
+  .detail-header{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; gap:12px;}
+  .detail-header .id{font-family:var(--font-mono); font-size:13px; color:var(--text-secondary);}
+  .detail-header .cat{font-size:16px; margin-top:4px;}
+  .score-big{font-family:var(--font-serif); font-size:34px; font-weight:600; text-align:right; line-height:1.1;}
+  .score-big small{display:block; font-family:var(--font-sans); font-size:11px; color:var(--text-secondary); font-weight:400;}
+  .checklist{border-top:1px solid var(--border-soft); padding-top:8px;}
+  .check-item{display:flex; gap:10px; padding:9px 0; border-bottom:1px solid var(--border-soft);}
+  .check-item:last-child{border-bottom:none;}
+  .check-icon{width:18px; height:18px; flex:0 0 18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-family:var(--font-mono); margin-top:1px;}
+  .icon-pass{background:var(--teal-dim); color:var(--teal);}
+  .icon-review{background:var(--amber-dim); color:var(--amber);}
+  .icon-fail{background:var(--coral-dim); color:var(--coral);}
+  .check-text .name{font-size:13px; margin-bottom:2px; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap;}
+  .check-text .name em{font-style:normal; font-family:var(--font-mono); font-size:11px; color:var(--text-muted);}
+  .check-text .rationale{font-size:12px; color:var(--text-secondary); line-height:1.5;}
+  .consistency-note{margin-top:14px; padding:12px 14px; background:var(--panel-2); border-left:2px solid var(--blue); font-size:12px; color:var(--text-secondary); line-height:1.6;}
+  .consistency-note b{color:var(--text-primary); font-weight:500;}
+  .detail-foot{margin-top:14px; display:flex; justify-content:flex-end;}
+
+  /* ---------- Queue ---------- */
+  .filterbar{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px; color:var(--text-secondary);}
+  .filter{background:var(--panel); border:1px solid var(--border); padding:5px 12px; font-size:12px; color:var(--text-secondary);}
+  .filter.active{background:var(--blue-dim); border-color:var(--blue); color:var(--text-primary);}
+  .filter-spacer{flex:1;}
+  .risk-num{font-family:var(--font-mono); margin-right:8px;}
+  .icon-button{background:none; border:1px solid var(--border); width:28px; height:28px; color:var(--text-secondary);}
+  .icon-button:hover{background:var(--panel-2);}
+  .state{font-size:12px; color:var(--text-secondary);}
+
+  /* ---------- Ticket detail ---------- */
+  .detail-top{display:flex; justify-content:space-between; align-items:flex-start; gap:18px; flex-wrap:wrap;}
+  .detail-title{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:10px 0 4px;}
+  .detail-title h3{font-family:var(--font-mono); font-size:24px; font-weight:500;}
+  .detail-top p{color:var(--text-secondary);}
+  .detail-actions{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  .detail-actions select{max-width:230px;}
+  select,input[type=text],input[type=number],input:not([type]){background:var(--panel-2); color:var(--text-primary); border:1px solid var(--border); padding:7px 10px; font-family:inherit; font-size:13px; min-width:0;}
+  input:focus,select:focus,button:focus-visible{outline:2px solid var(--blue); outline-offset:1px;}
+  .runbar{display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:12px 16px; background:var(--panel); border:1px solid var(--border); font-size:12px; margin-top:16px;}
+  .runbar b{color:var(--text-muted); font-weight:400;}
+  .rstep{padding:4px 10px; background:var(--panel-2); color:var(--text-muted); transition:all .25s;}
+  .rstep.on{background:var(--teal-dim); color:var(--teal);}
+  .detail-grid{display:grid; grid-template-columns:300px 1fr; gap:20px;}
+  .ring{width:136px; height:136px; border-radius:50%; display:grid; place-items:center; margin:4px auto 16px;}
+  .ring > div{width:108px; height:108px; border-radius:50%; background:var(--panel); display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .ring strong{font-family:var(--font-serif); font-size:32px; line-height:1;}
+  .ring span{font-size:11px; color:var(--text-secondary); margin-top:3px;}
+  .mini-stats{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border);}
+  .mini-stats div{background:var(--panel); padding:9px 10px; text-align:center;}
+  .mini-stats span{display:block; font-size:11px; color:var(--text-secondary);}
+  .mini-stats strong{font-size:13px; font-weight:500;}
+  .finding{display:flex; gap:12px; padding:11px 0; border-bottom:1px solid var(--border-soft);}
+  .finding:last-child{border-bottom:0;}
+  .finding-icon{width:22px; height:22px; flex:0 0 22px; border-radius:50%; display:grid; place-items:center; font-size:12px; font-weight:600; margin-top:1px;}
+  .finding-icon.pass{background:var(--teal-dim); color:var(--teal);}
+  .finding-icon.review{background:var(--amber-dim); color:var(--amber);}
+  .finding-icon.fail{background:var(--coral-dim); color:var(--coral);}
+  .finding-body{flex:1; min-width:0;}
+  .finding-title{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  .finding-body p{font-size:13px; color:var(--text-secondary); margin-top:3px;}
+  .ovform{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; padding:10px; background:var(--panel-2);}
+  .ovform input{flex:1; min-width:180px;}
+  .tabs{display:flex; gap:2px; border-bottom:1px solid var(--border);}
+  .tabs button{background:none; border:0; border-bottom:2px solid transparent; padding:9px 16px; color:var(--text-secondary);}
+  .tabs button.active{color:var(--text-primary); border-bottom-color:var(--blue);}
+  .evidence-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px;}
+  .evidence-card{border:1px solid var(--border); padding:13px 15px; background:var(--panel-2);}
+  .evidence-head{display:flex; justify-content:space-between; gap:8px; align-items:center; margin-bottom:6px;}
+  .evidence-card p{font-size:13px; color:var(--text-secondary);}
+  .evidence-meta{display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-top:10px; font-size:11px; color:var(--text-muted); font-family:var(--font-mono);}
+  .data-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; margin-bottom:18px;}
+  .data-grid span{display:block; font-size:11px; color:var(--text-muted);}
+  .data-grid strong{font-weight:500;}
+  .ticket-data h4{font-size:12px; color:var(--text-muted); letter-spacing:.06em; text-transform:uppercase; margin:16px 0 8px; font-weight:500;}
+  .note{padding:9px 12px; background:var(--panel-2); border-left:2px solid var(--border); margin-bottom:6px; font-size:13px; color:var(--text-secondary);}
+  .chips{display:flex; gap:8px; flex-wrap:wrap;}
+  .chips span{background:var(--teal-dim); color:var(--teal); padding:3px 10px; font-size:12px;}
+  .trail-item{padding:10px 0; border-bottom:1px solid var(--border-soft); font-size:13px;}
+  .trail-item small{display:block; color:var(--text-muted); font-family:var(--font-mono); font-size:11px; margin-top:2px;}
+  .human-banner{display:flex; justify-content:space-between; gap:20px; align-items:center; flex-wrap:wrap; padding:18px 22px; background:var(--amber-dim); border:1px solid var(--border);}
+  .human-banner strong{display:block; margin:8px 0 4px; font-family:var(--font-serif); font-size:17px; font-weight:600;}
+  .human-banner p{font-size:13px; color:var(--text-secondary); max-width:640px;}
+  .mini-flow{display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:12px;}
+  .mini-flow span{background:var(--panel); padding:5px 10px;}
+  .mini-flow b{font-weight:400; color:var(--text-muted);}
+
+  /* ---------- Copilot ---------- */
+  .copilot-layout{display:grid; grid-template-columns:1fr 280px; gap:20px; align-items:start;}
+  .copilot-head{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:14px;}
+  .copilot-head h2{font-family:var(--font-serif); font-size:23px; font-weight:600; margin:8px 0 2px;}
+  .copilot-head p{color:var(--text-secondary); font-size:13px;}
+  .copilot-head select{max-width:260px;}
+  .suggestions{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;}
+  .suggestions button{background:var(--panel-2); border:1px solid var(--border); padding:6px 12px; font-size:12px; color:var(--text-secondary);}
+  .suggestions button:hover{color:var(--text-primary); border-color:var(--blue);}
+  .chat{display:flex; flex-direction:column; gap:14px; min-height:260px; max-height:460px; overflow-y:auto; padding:6px 2px 6px 0;}
+  .msg{display:flex; gap:10px; max-width:88%;}
+  .msg.user{align-self:flex-end; flex-direction:row-reverse;}
+  .chat-avatar{width:28px; height:28px; flex:0 0 28px; border-radius:50%; display:grid; place-items:center; font-size:12px; font-weight:600; background:var(--teal-dim); color:var(--teal);}
+  .msg.user .chat-avatar{background:var(--blue-dim); color:var(--blue);}
+  .bubble{background:var(--panel-2); padding:10px 14px; font-size:13px; line-height:1.55;}
+  .msg.user .bubble{background:var(--blue-dim);}
+  .bubble strong{display:block; font-weight:500; font-size:12px; color:var(--text-secondary); margin-bottom:3px;}
+  .bubble p + p{margin-top:6px;}
+  .sources{display:flex; gap:6px; flex-wrap:wrap; margin-top:9px;}
+  .sources span{font-size:11px; font-family:var(--font-mono); color:var(--text-muted); border:1px solid var(--border); padding:1px 7px;}
+  .composer{display:flex; gap:8px; margin-top:16px;}
+  .composer input{flex:1;}
+  .copilot-side h3{font-family:var(--font-serif); font-size:17px; font-weight:600; margin-bottom:12px;}
+  .agent-step{display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid var(--border-soft);}
+  .agent-step:last-child{border-bottom:0;}
+  .agent-step > span{width:22px; height:22px; border-radius:50%; background:var(--blue-dim); color:var(--blue); display:grid; place-items:center; font-size:11px; font-family:var(--font-mono);}
+  .agent-step strong{display:block; font-size:13px; font-weight:500;}
+  .agent-step small{color:var(--teal); font-size:11px;}
+  .typing span{display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--text-muted); margin-right:3px; animation:blink 1s infinite;}
+  .typing span:nth-child(2){animation-delay:.15s;} .typing span:nth-child(3){animation-delay:.3s;}
+  @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+
+  /* ---------- QC / Analytics / Config ---------- */
+  .focus-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; margin-top:12px;}
+  .focus-card{background:var(--panel-2); padding:13px 15px; display:flex; flex-direction:column; gap:3px; border-left:2px solid var(--amber);}
+  .focus-card span{color:var(--amber); font-weight:600;}
+  .focus-card small{color:var(--text-secondary); font-size:12px;}
+  .bar-row{display:grid; grid-template-columns:150px 1fr 48px; gap:12px; align-items:center; padding:7px 0; font-size:13px;}
+  .bar-row > div{height:9px; background:var(--panel-2);}
+  .bar-row i{display:block; height:100%; background:var(--blue);}
+  .bar-row b{font-family:var(--font-mono); font-weight:500; text-align:right; font-size:12px;}
+  .chart-labels{display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); margin-top:8px;}
+  .config-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; margin-top:12px;}
+  .config-grid label{display:block; font-size:12px; color:var(--text-secondary);}
+  .input-row{display:flex; align-items:center; gap:8px; margin-top:6px;}
+  .input-row input{width:90px;}
+  .input-row span{color:var(--text-muted);}
+  .dist{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; align-items:center; font-size:12px; color:var(--text-secondary);}
+  .cfg-note{font-size:12px; color:var(--text-muted); margin-top:14px;}
+  .governance-flow{display:flex; flex-direction:column; gap:6px; margin-top:12px; max-width:340px;}
+  .governance-flow span{background:var(--panel-2); padding:9px 14px; font-size:13px; border-left:2px solid var(--blue);}
+  .governance-flow b{color:var(--text-muted); font-weight:400; padding-left:8px;}
+  .rule-cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px; margin-top:12px;}
+  .rule-card{background:var(--panel-2); padding:14px 16px;}
+  .rule-type{font-family:var(--font-mono); font-size:12px; color:var(--blue); margin-bottom:8px;}
+  .rule-line{display:flex; justify-content:space-between; gap:10px; font-size:13px; padding:5px 0; border-bottom:1px solid var(--border-soft);}
+  .rule-line:last-child{border-bottom:0;}
+  .rule-line small{color:var(--text-muted); font-size:11px; white-space:nowrap;}
+
+  .foot{margin-top:28px; font-size:11px; color:var(--text-muted); text-align:center;}
+  .toast{position:fixed; right:20px; bottom:calc(20px + env(safe-area-inset-bottom,0px)); background:var(--text-primary); color:var(--bg); padding:11px 16px; font-size:13px; max-width:360px; z-index:50; box-shadow:0 6px 24px rgba(0,0,0,.28); opacity:0; transform:translateY(8px); pointer-events:none; transition:all .2s;}
+  .toast.show{opacity:1; transform:none;}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:1100px){
+    .detail-grid,.copilot-layout,.main-grid,.grid2{grid-template-columns:1fr;}
+  }
+  @media (max-width:900px){
+    .shell{grid-template-columns:1fr;}
+    .sidebar{position:static; height:auto; border-right:0; border-bottom:1px solid var(--border); padding:14px 12px 6px;}
+    .mode-pill,.nav-title,.sidebar-foot{display:none;}
+    .brand{padding-bottom:10px;}
+    .nav{flex-direction:row; overflow-x:auto; gap:4px; padding-bottom:6px;}
+    .nav-item{width:auto; white-space:nowrap; border-left:0; border-bottom:2px solid transparent;}
+    .nav-item.active{border-bottom-color:var(--blue);}
+    .topbar,.content{padding-left:16px; padding-right:16px;}
+    .kpi-row{grid-template-columns:repeat(2,1fr);}
+    .before-after{grid-template-columns:1fr;} .ba-divider{display:none;}
+    .bar-row{grid-template-columns:110px 1fr 44px;}
+    .row{grid-template-columns:82px 40px 1fr 34px 60px; gap:8px; padding-left:12px; padding-right:12px;}
+    .lifecycle{grid-template-columns:1fr;}
+  }
+  @media (max-width:480px){
+    .kpi-row{grid-template-columns:1fr;}
+    .msg{max-width:100%;}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><h1><i></i>AuditIQ</h1><small>Continuous audit intelligence</small></div>
+    <div class="mode-pill">DEMO ENVIRONMENT</div>
+    <div class="nav-title">OPERATIONS</div>
+    <nav class="nav" id="nav" aria-label="Main"></nav>
+    <div class="sidebar-foot"><div><span class="dot"></span>AI monitoring active</div><div class="ver">Prototype v1.0 · Mock data</div></div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <div><div class="eyebrow" id="eyebrow"></div><h2 id="title"></h2></div>
+      <div class="top-actions">
+        <button class="live-pill" id="livePill" data-act="pause" title="Pause or resume the live audit stream"></button>
+        <button class="btn" id="themeBtn" data-act="theme" aria-label="Toggle light or dark theme"></button>
+        <div class="user"><div class="avatar">DA</div><div><strong>Demo Auditor</strong><span>Governance Operations</span></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div id="view"></div>
+      <div class="foot">Prototype — synthetic ticket data for demonstration purposes only. All figures are mock/demo values. Not connected to a live ITSM system.</div>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   AuditIQ — merged prototype
+   • Live audit stream, CAFÉ score, consistency & coverage charts (from the first prototype)
+   • Multi-page platform, INC/SR/CR rules, evidence, copilot, QC, analytics, config (from the team prototype,
+     with the FastAPI logic ported to in-browser JavaScript so no backend is needed)
+   ===================================================================== */
+
+/* ---------- helpers ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const rand = (a,b) => Math.random()*(b-a)+a;
+const ri = (a,b) => Math.round(rand(a,b));
+const clamp = (n,lo,hi) => Math.max(lo, Math.min(hi, n));
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const timeStr = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+const rel = ms => { const s = Math.max(0, Math.round((Date.now()-ms)/1000)); if(s<60) return 'just now'; const m = Math.round(s/60); return m<60 ? m+' min ago' : Math.round(m/60)+' h ago'; };
+const ago = m => Date.now() - m*60000;
+
+/* ---------- configuration ---------- */
+const CFG_DEFAULT = {auto:95, recommend:80, critical:80, high:60, sampling:25};
+let CFG = {...CFG_DEFAULT};
+const MEDIUM = 45;
+
+const RULES = {
+  INC: [['Categorization','Correct category','deterministic'],['Priority','Correct severity','deterministic'],['SLA','Within SLA','deterministic'],['Root Cause','Documented','ai'],['Resolution','Clearly documented','ai'],['Customer Communication','Required','ai'],['Closure Code','Correct','deterministic']],
+  SR:  [['Request classification','Correct','deterministic'],['Authorization','Required approval','deterministic'],['Fulfillment','Completed','deterministic'],['SLA','Met','deterministic'],['Documentation','Complete','ai'],['Closure','Correct','deterministic']],
+  CR:  [['Risk assessment','Required','deterministic'],['Business approval','Required','deterministic'],['Technical approval','Required','deterministic'],['Implementation plan','Required','ai'],['Rollback plan','Required','ai'],['Testing','Required','ai'],['Post-implementation review','Required','ai']]
+};
+const META = {
+  'Categorization':['Ticket fields','Category aligns with the service impact.'],
+  'Priority':['Ticket fields','Priority aligns with impact and urgency.'],
+  'SLA':['SLA record','Timestamps confirm the SLA target was met.'],
+  'Root Cause':['Work notes','Root cause documented in work notes.'],
+  'Resolution':['Work notes','Resolution steps clearly documented.'],
+  'Customer Communication':['Closure notes','Customer confirmation recorded.'],
+  'Closure Code':['Ticket fields','Closure code matches the resolution.'],
+  'Request classification':['Ticket fields','Request classified against the correct catalog item.'],
+  'Authorization':['Approval records','Required approval recorded before fulfillment.'],
+  'Fulfillment':['Fulfillment tasks','Fulfillment tasks completed and confirmed.'],
+  'Documentation':['Work notes','Documentation is complete and consistent.'],
+  'Closure':['Closure controls','Closure criteria satisfied.'],
+  'Risk assessment':['Change risk assessment','Risk classification documented with impact analysis.'],
+  'Business approval':['Approval records','Business owner approval recorded before implementation.'],
+  'Technical approval':['Approval records','Technical approval recorded.'],
+  'Implementation plan':['Implementation Plan','Steps, owner and implementation window are documented.'],
+  'Rollback plan':['Implementation Plan','Rollback steps documented and executable.'],
+  'Testing':['Validation checklist','Pre-production validation evidence attached.'],
+  'Post-implementation review':['Closure controls','Post-implementation validation recorded.']
+};
+const R_REVIEW = ['Field present but wording is ambiguous — recommend a second look.','Partial evidence found; one supporting artifact is missing.',"Close to threshold — within the model's low-confidence band."];
+const R_FAIL = ['No supporting evidence found in ticket record or work notes.','Resolution text does not correspond to the stated issue.','Required field left blank at closure.'];
+const ACTION = {
+  'Business approval':'Obtain business approval before implementation','Technical approval':'Obtain technical approval','Rollback plan':'Complete rollback steps before implementation',
+  'Testing':'Attach validation evidence','Risk assessment':'Complete the risk assessment','Implementation plan':'Complete the implementation plan',
+  'Post-implementation review':'Record validation after implementation','Root Cause':'Auditor confirmation of root cause','Authorization':'Confirm authorization','SLA':'Review the SLA breach'
+};
+const CATS = {
+  INC:['Network outage','Application error','Access issue','Hardware failure','Database latency'],
+  SR:['Access request','Software install','Password reset','Equipment request','Permission change'],
+  CR:['Change - Standard: patching','Change - Standard: config','Change - Emergency: fix','Change - Standard: upgrade']
+};
+const GROUPS = {INC:['Network Operations','Applications','Service Desk'], SR:['Service Desk','Workplace Services','Identity & Access'], CR:['Infrastructure','Security','Applications']};
+const NOTES = {
+  INC:['Issue triaged and assigned to the resolver group.','Fix applied; service confirmed restored.','Ticket closed after monitoring period.'],
+  SR:['Request validated against the service catalog.','Fulfillment tasks completed.','Requester notified and ticket closed.'],
+  CR:['Change reviewed at the change advisory board.','Implementation window confirmed with the owning team.','Change closed after implementation window.']
+};
+
+/* ---------- seed tickets (from the team prototype) ---------- */
+const E = (status,confidence,source,text,reason) => ({status,confidence,source,text,reason});
+const SEEDS = [
+  { id:'CR001992', type:'CR', shortDescription:'Database upgrade - production cluster', priority:'P1', assignmentGroup:'Infrastructure', owner:'Database Operations',
+    state:'Scheduled', risk:62, compliance:62, confidence:96, sla:'At risk', category:'Database', target:'2026-09-23 19:00', businessOwner:'Finance Applications',
+    flags:{businessApproval:false, technicalApproval:true, rollbackPlan:'partial', testing:true, riskAssessment:true, implementationPlan:true, postValidation:false},
+    description:'Upgrade PostgreSQL cluster from 14.x to 16.x to address security and capacity requirements.',
+    workNotes:['Technical review completed by Database Operations.','Production change window reserved for 19:00.','Rollback section says previous configuration will be restored if deployment fails, but rollback steps are incomplete.'],
+    approvals:['Technical approval — Database Operations'],
+    evidence:{
+      'Risk assessment':E('PASS',99,'Change risk assessment','High-risk classification documented with impact analysis.'),
+      'Business approval':E('FAIL',98,'Approval records','No business owner approval detected before scheduled implementation.','Required business owner approval is missing.'),
+      'Technical approval':E('PASS',99,'Approval records','Technical approval recorded from Database Operations.'),
+      'Implementation plan':E('PASS',94,'Implementation Plan → Section 2','Steps, owner and planned implementation window are documented.'),
+      'Rollback plan':E('REVIEW',71,'Implementation Plan → Section 4','Intent to restore the previous configuration is documented, but detailed rollback steps are incomplete.','Rollback intent is present, but execution steps are incomplete.'),
+      'Testing':E('PASS',95,'Validation checklist','Pre-production validation evidence is attached.'),
+      'Post-implementation review':E('REVIEW',93,'Closure controls','No post-implementation validation evidence has been recorded yet.','Not yet due — validation evidence will be required after implementation.')
+    }, time:new Date(ago(14)), flaggedAt:ago(14) },
+  { id:'CR002010', type:'CR', shortDescription:'Firewall rule update - remote access', priority:'P2', assignmentGroup:'Security', owner:'Security Operations',
+    state:'Pending approval', risk:87, compliance:49, confidence:91, sla:'At risk', category:'Security', target:'2026-09-23 16:30', businessOwner:'Remote Access Service Owner',
+    flags:{businessApproval:false, technicalApproval:true, rollbackPlan:false, testing:false, riskAssessment:true, implementationPlan:true, postValidation:false},
+    description:'Firewall rule change to support remote access routing.',
+    workNotes:['Approval pending.','Implementation scheduled soon.','No rollback plan detected.'],
+    approvals:['Technical approval — Security Operations'],
+    evidence:{
+      'Risk assessment':E('PASS',96,'Change risk assessment','Risk classification documented for the remote-access routing change.'),
+      'Business approval':E('FAIL',97,'Approval records','Business approval is still pending ahead of the scheduled implementation window.','Approval pending before scheduled implementation.'),
+      'Technical approval':E('PASS',99,'Approval records','Technical approval recorded from Security Operations.'),
+      'Implementation plan':E('PASS',90,'Implementation Plan → Section 1','Routing change steps and implementation window are documented.'),
+      'Rollback plan':E('FAIL',95,'Implementation Plan','No rollback plan detected.'),
+      'Testing':E('FAIL',90,'Validation checklist','No pre-production validation evidence is attached.'),
+      'Post-implementation review':E('REVIEW',88,'Closure controls','No post-implementation validation recorded yet.','Not yet due — validation evidence will be required after implementation.')
+    }, time:new Date(ago(8)), flaggedAt:ago(8) },
+  { id:'INC0045821', type:'INC', shortDescription:'Branch network outage', priority:'P2', assignmentGroup:'Network Operations', owner:'L2 Network',
+    state:'Closed', risk:18, compliance:96, confidence:97, sla:'Met', category:'Network', target:'Closed', flags:{},
+    description:'Intermittent connectivity affecting branch users.',
+    workNotes:['Root cause identified as failed switch module.','Customer confirmed service recovery at 14:35.'], approvals:[],
+    evidence:{
+      'Categorization':E('PASS',99,'Ticket fields','Network incident category aligns with service impact.'),
+      'Priority':E('PASS',97,'Ticket fields','P2 severity aligns with impact and urgency.'),
+      'SLA':E('PASS',99,'SLA record','Resolution completed within target SLA.'),
+      'Root Cause':E('PASS',96,'Work notes','Failed switch module documented as root cause.'),
+      'Resolution':E('PASS',98,'Work notes','Switch module replaced and connectivity restored.'),
+      'Customer Communication':E('PASS',95,'Closure notes','Customer confirmation recorded.'),
+      'Closure Code':E('PASS',99,'Ticket fields','Closure code matches incident resolution.')
+    }, time:new Date(ago(95)) },
+  { id:'SR002134', type:'SR', shortDescription:'Laptop replacement request', priority:'P3', assignmentGroup:'Service Desk', owner:'EU Workplace',
+    state:'Closed', risk:28, compliance:94, confidence:94, sla:'Met', category:'End User', target:'Closed', flags:{businessApproval:true},
+    description:'Standard laptop replacement request for an employee.',
+    workNotes:['Manager authorization validated.','Device issued and old device returned.'], approvals:['Manager approval'],
+    evidence:{
+      'Request classification':E('PASS',98,'Ticket fields','Request classified as a standard hardware replacement.'),
+      'Authorization':E('PASS',97,'Approval records','Manager authorization validated.'),
+      'Fulfillment':E('PASS',96,'Fulfillment tasks','Device issued and old device returned.'),
+      'SLA':E('PASS',99,'SLA record','Fulfilled within target SLA.'),
+      'Documentation':E('PASS',93,'Work notes','Documentation is complete and consistent.'),
+      'Closure':E('PASS',98,'Closure controls','Closure criteria satisfied.')
+    }, time:new Date(ago(110)) },
+  { id:'INC0045810', type:'INC', shortDescription:'Batch job failed overnight', priority:'P2', assignmentGroup:'Applications', owner:'Batch Operations',
+    state:'Closed', risk:34, compliance:91, confidence:88, sla:'Met', category:'Applications', target:'Closed', flags:{},
+    description:'Overnight batch job failure caused delayed downstream processing.',
+    workNotes:['Job restarted successfully.','Root cause note is brief; similar ticket history may help.'], approvals:[],
+    evidence:{
+      'Categorization':E('PASS',95,'Ticket fields','Application incident category aligns with the failed job.'),
+      'Priority':E('PASS',93,'Ticket fields','P2 severity aligns with downstream impact.'),
+      'SLA':E('PASS',99,'SLA record','Resolution completed within target SLA.'),
+      'Root Cause':E('REVIEW',72,'Work notes','The root cause note is brief and does not explain why the job failed.','Root cause documentation is brief and needs auditor confirmation.'),
+      'Resolution':E('PASS',96,'Work notes','Job restarted and downstream processing resumed.'),
+      'Customer Communication':E('PASS',90,'Closure notes','Downstream owners were notified of the delay.'),
+      'Closure Code':E('PASS',97,'Ticket fields','Closure code matches incident resolution.')
+    }, time:new Date(ago(27)), flaggedAt:ago(27) }
+];
+const SEED_IDS = SEEDS.map(s => s.id);
+let tickets = SEEDS.map(s => ({trail:[], ...s}));
+const seq = {INC:45822, SR:2135, CR:2011};
+const PREF = {INC:'INC00', SR:'SR00', CR:'CR00'};
+const AUDITOR = 'Demo Auditor';
+
+/* ---------- derived audit logic ---------- */
+const byId = id => tickets.find(t => t.id === id);
+function findings(t){
+  return RULES[t.type].map(r => [r, t.evidence[r[0]]]).filter(([r,e]) => e && (e.status !== 'PASS' || e.overridden))
+    .map(([r,e]) => ({criterion:r[0], method:r[2], status:e.status, severity:e.status==='FAIL'?'HIGH':'MEDIUM', confidence:e.confidence, reason:e.overridden ? e.reason : (e.reason || e.text), overridden:!!e.overridden}));
+}
+function decision(t){ const f = findings(t).filter(x => x.status !== 'PASS'); return f.some(x => x.status==='FAIL') ? 'FAIL' : f.length ? 'REVIEW' : 'PASS'; }
+function band(t){ return t.risk >= CFG.critical ? 'CRITICAL' : t.risk >= CFG.high ? 'HIGH' : t.risk >= MEDIUM ? 'MEDIUM' : 'LOW'; }
+function cons(t){
+  const d = decision(t); if(!t._cons || t._cons.d !== d) t._cons = {d, pct: d==='PASS' ? ri(88,97) : d==='REVIEW' ? ri(30,45) : ri(84,95)};
+  return t._cons;
+}
+function consNote(t){
+  const c = cons(t), id = `<b>${esc(t.id)}</b>`;
+  if(c.d === 'PASS') return `${id} matches a pattern both historical auditors scored the same way ${c.pct}% of the time — resolved automatically, no review needed.`;
+  if(c.d === 'REVIEW') return `${id} falls in AuditIQ's low-confidence band. Historically, Auditor A and Auditor B disagreed on ${c.pct}% of tickets like this one — it has been routed to the review workbench rather than auto-scored.`;
+  return `${id} has a control failure detected with high AI confidence. Historical auditors reached the same FAIL outcome on ${c.pct}% of similar tickets — flagged for confirmation and remediation, never auto-closed.`;
+}
+
+/* ---------- ticket generation (live stream) ---------- */
+function genTicket(time, force){
+  const type = pick(['INC','INC','SR','SR','CR']);
+  const category = pick(CATS[type]);
+  const rules = RULES[type];
+  const forceIdx = force ? Math.floor(Math.random()*rules.length) : -1;
+  const ev = {};
+  rules.forEach(([name,,method], i) => {
+    let status;
+    if(i === forceIdx) status = force;
+    else { const roll = Math.random(); status = roll < 0.955 ? 'PASS' : roll < 0.985 ? 'REVIEW' : 'FAIL'; }
+    const [source, passText] = META[name];
+    let text, confidence;
+    if(status === 'PASS'){ text = passText; confidence = method==='ai' ? ri(88,97) : ri(96,99); }
+    else if(status === 'REVIEW'){ text = pick(R_REVIEW); confidence = ri(66,79); }
+    else { text = pick(R_FAIL); confidence = ri(90,98); }
+    ev[name] = {status, confidence, source, text};
+  });
+  const vals = Object.values(ev);
+  const passN = vals.filter(v => v.status==='PASS').length;
+  const hasFail = vals.some(v => v.status==='FAIL'), hasReview = vals.some(v => v.status==='REVIEW');
+  const score = clamp(Math.round(passN/rules.length*100 - (hasFail ? rand(5,15) : 0) - (hasReview ? rand(0,5) : 0)), 35, 99);
+  const risk = clamp(Math.round(100 - score + (hasFail ? 10 : 0) + rand(0,8)), 5, 95);
+  const st = n => ev[n] && ev[n].status;
+  const flag = n => st(n)==='PASS' ? true : st(n)==='REVIEW' ? 'partial' : false;
+  const flags = type !== 'CR' ? {} : {businessApproval:st('Business approval')==='PASS', technicalApproval:st('Technical approval')==='PASS', rollbackPlan:flag('Rollback plan'), testing:st('Testing')==='PASS', riskAssessment:st('Risk assessment')==='PASS', implementationPlan:st('Implementation plan')==='PASS', postValidation:st('Post-implementation review')==='PASS'};
+  const id = PREF[type] + (seq[type]++);
+  return {
+    id, type, shortDescription:category, category, priority:pick(['P2','P3','P3','P4']), assignmentGroup:pick(GROUPS[type]), owner:pick(['L1 Support','L2 Support','Platform Operations','Workplace Services']),
+    state:'Closed', risk, compliance:score, confidence:Math.round(vals.reduce((s,v) => s+v.confidence, 0)/vals.length),
+    sla: st('SLA')==='FAIL' ? 'Breached' : 'Met', target:'Closed', flags, businessOwner:'Service Owner',
+    description:`Closed ${type==='INC'?'incident':type==='SR'?'service request':'change'}: ${category.toLowerCase()}.`,
+    workNotes:NOTES[type].slice(0, 2), approvals:[], evidence:ev, trail:[], time:time || new Date(), flaggedAt:(hasFail||hasReview) ? (time||new Date()).getTime() : undefined
+  };
+}
+
+/* ---------- actions ported from the FastAPI backend ---------- */
+function resolveApproval(t){
+  t.flags.businessApproval = true;
+  t.approvals = [...new Set([...t.approvals, `Business owner approval — ${t.businessOwner}`])];
+  t.evidence['Business approval'] = {status:'PASS', confidence:99, source:'Approval records', text:'Business owner approval received and timestamped before implementation.'};
+  t.risk = Math.max(5, t.risk - 21);
+  t.compliance = Math.min(100, t.compliance + 29);
+  t.confidence = Math.max(t.confidence, 97);
+}
+function applyOverride(t, crit, dec, note){
+  const e = t.evidence[crit], from = e.status;
+  e.status = dec; e.overridden = true; e.reason = `Human override by ${AUDITOR}: ${note}`;
+  if(dec === 'PASS') t.compliance = Math.min(100, t.compliance + 6);
+  t.trail.unshift({who:AUDITOR, criterion:crit, from, to:dec, note, when:new Date()});
+}
+
+/* ---------- stats ---------- */
+function stats(){
+  const c = tickets.filter(t => t.state === 'Closed'), n = c.length;
+  const pass = c.filter(t => decision(t) === 'PASS').length;
+  const hi = t => ['CRITICAL','HIGH'].includes(band(t));
+  return {
+    n, pass, flagged:n-pass, avg:n ? Math.round(c.reduce((s,t) => s+t.compliance, 0)/n) : 0, auto:n ? Math.round(pass/n*100) : 0,
+    high:tickets.filter(hi).length, alerts:tickets.filter(t => t.state!=='Closed' && decision(t)!=='PASS' && hi(t)).length,
+    attention:tickets.filter(t => decision(t) !== 'PASS').length
+  };
+}
+function alertList(){
+  const mk = (t, open) => {
+    const f = findings(t).filter(x => x.status !== 'PASS').sort((a,b) => (a.status==='FAIL'?0:1) - (b.status==='FAIL'?0:1));
+    const b = band(t);
+    return {id:t.id, status: open ? (b==='CRITICAL'||b==='HIGH' ? b : 'REVIEW') : decision(t), message:f.slice(0,2).map(x => x.reason).join(' '), action:ACTION[f[0].criterion] || 'Auditor review', time:rel(t.flaggedAt || t.time.getTime())};
+  };
+  const open = tickets.filter(t => t.state!=='Closed' && decision(t)!=='PASS').sort((a,b) => b.risk-a.risk).map(t => mk(t,true));
+  const closed = tickets.filter(t => t.state==='Closed' && decision(t)!=='PASS').sort((a,b) => b.time-a.time).slice(0,3).map(t => mk(t,false));
+  return open.concat(closed);
+}
+
+/* ---------- state ---------- */
+const S = {page:'dashboard', selected:'CR001992', streamSel:null, queueFilter:'ATTN', tab:'findings', paused:false, overrideOpen:null, running:false,
+  cpTicket:'CR001992', chat:[], pending:false};
+const charts = {};
+const NAV = [['dashboard','Executive Dashboard','⌂'],['monitoring','Live Monitoring','◉'],['queue','Audit Queue','▣'],['detail','Ticket Audit Detail','◫'],['copilot','Auditor Copilot','✦'],['qc','QC Dashboard','◌'],['analytics','Analytics','◒'],['config','Audit Configuration','⚙']];
+
+/* ---------- small renderers ---------- */
+const tagCls = s => String(s).toLowerCase();
+const typeBadge = t => `<span class="type-badge type-${t.toLowerCase()}">${t}</span>`;
+const glyph = s => s==='PASS' ? '✓' : s==='FAIL' ? '✕' : '?';
+const yn = v => v === true ? 'Yes' : v === false ? 'No' : v === 'partial' ? 'Partial' : 'N/A';
+function ticketOptions(sel){
+  const seen = new Set(), list = [];
+  const add = t => { if(t && !seen.has(t.id)){ seen.add(t.id); list.push(t); } };
+  SEED_IDS.forEach(i => add(byId(i))); add(byId(sel));
+  tickets.filter(t => decision(t) !== 'PASS').slice(0,25).forEach(add);
+  return list.map(t => `<option value="${esc(t.id)}"${t.id===sel?' selected':''}>${esc(t.id)} — ${esc(t.shortDescription)}</option>`).join('');
+}
+function kpi(label, value, sub, cls='') { return `<div class="kpi"><div class="label">${label}</div><div class="value">${value}</div><div class="delta ${cls}">${sub}</div></div>`; }
+function kpisHTML(){
+  const s = stats();
+  return `<div class="kpi-row">
+    ${kpi('Tickets audited today', `${s.n}<small>/ 100% coverage</small>`, 'vs ~8% sample-based today')}
+    ${kpi('Average CAFÉ score', s.avg, 'across INC · SR · CR', 'mute')}
+    ${kpi('Auditor consistency index', '91<small>/ 100</small>', 'vs 68/100 manual baseline')}
+    ${kpi('Flagged for human review', s.flagged, 'routed automatically', 'warn')}
+  </div>
+  <div class="kpi-row">
+    ${kpi('High-risk tickets', s.high, 'Needs attention', 'warn')}
+    ${kpi('AI alerts', s.alerts, 'Pre-closure signals on open tickets', 'warn')}
+    ${kpi('Auto-audited', s.auto + '%', 'Target 70–90%')}
+    ${kpi('Avg audit time', '7.4<small>min</small>', 'Mock demo metric', 'mute')}
+  </div>`;
+}
+
+/* ---------- views ---------- */
+function vDashboard(){
+  return `<div class="stack">
+    <section class="hero"><div><span class="pill blue">PREVENT · AUDIT · IMPROVE</span><h2>From manual ticket audits to continuous audit intelligence.</h2><p>AI extracts evidence, applies deterministic rules, reasons over unstructured content, and routes only the right exceptions to people.</p></div>
+      <div class="flow"><span>Ticket</span><b>→</b><span>Evidence</span><b>→</b><span>Rules + AI</span><b>→</b><span>Decision</span></div></section>
+    <div id="kpis">${kpisHTML()}</div>
+    <div class="grid2">
+      <section class="card"><div class="card-head"><div><h3>Auditor consistency</h3><p>AuditIQ score vs historical human auditors, by category</p></div></div>
+        <div class="canvas-box"><canvas id="cConsistency" role="img" aria-label="Bar chart comparing AI audit scores against two human auditors' historical average scores across ticket categories; AI scores land between the two with less spread"></canvas></div>
+        <div class="legend"><span><span class="sw" style="background:var(--blue)"></span>AuditIQ (AI)</span><span><span class="sw" style="background:var(--text-secondary)"></span>Auditor A (historical)</span><span><span class="sw" style="background:var(--text-muted)"></span>Auditor B (historical)</span></div></section>
+      <section class="card"><div class="card-head"><div><h3>Audit coverage and pass rate</h3><p>Last 14 days</p></div></div>
+        <div class="canvas-box"><canvas id="cCoverage" role="img" aria-label="Line chart showing audit coverage rising to 100 percent and pass rate trending upward over the last 14 days"></canvas></div>
+        <div class="legend"><span><span class="sw" style="background:var(--teal)"></span>Coverage %</span><span><span class="sw" style="background:var(--amber)"></span>Pass rate %</span></div></section>
+    </div>
+    <div class="grid2">
+      <section class="card"><div class="card-head"><div><h3>Continuous assurance</h3><p>Live issues detected before closure or implementation.</p></div><span class="pill green">● ACTIVE</span></div><div id="dashAlerts">${dashAlertsHTML()}</div></section>
+      <section class="card"><div class="card-head"><div><h3>Audit lifecycle</h3><p>AI agents collaborate under human governance.</p></div></div>
+        <div class="lifecycle">${[['01','Intake','ServiceNow / ITSM'],['02','Enrichment','Policy + history'],['03','Evidence','Extract + cite'],['04','Audit','Rules + reasoning'],['05','Decision','PASS / FAIL / REVIEW'],['06','Learn','QC feedback']].map(x => `<div class="life-step"><span>${x[0]}</span><div><strong>${x[1]}</strong><small>${x[2]}</small></div></div>`).join('')}</div></section>
+    </div>
+    <section class="card"><div class="card-head"><div><h3>Demo transformation</h3><p>Proposal target state, not production performance.</p></div></div>
+      <div class="before-after"><div><label>TODAY</label><div class="ba-row"><span>Manual audit</span><b>→</b><span>Closed-ticket review</span></div><div class="ba-row"><span>Separate audit &amp; QC</span><b>→</b><span>Manual evidence search</span></div><div class="ba-row"><span>Sample-based</span><b>→</b><span>Static reports</span></div></div>
+      <div class="ba-divider"></div>
+      <div class="after"><label>AUDITIQ</label><div class="ba-row"><span>AI-assisted audit</span><b>→</b><span>Continuous monitoring</span></div><div class="ba-row"><span>Integrated lifecycle</span><b>→</b><span>Explainable AI</span></div><div class="ba-row"><span>Risk-based sampling</span><b>→</b><span>Real-time analytics</span></div></div></div></section>
+  </div>`;
+}
+function dashAlertsHTML(){
+  const a = alertList().slice(0,3);
+  if(!a.length) return '<div class="empty">No active alerts.</div>';
+  return a.map(x => `<div class="alert-row" data-act="open" data-id="${esc(x.id)}"><div class="alert-icon ${tagCls(x.status)}">!</div><div class="alert-main"><div><strong>${esc(x.id)}</strong><span class="tag ${tagCls(x.status)}">${x.status}</span></div><p>${esc(x.message)}</p><small>${esc(x.time)}</small></div><span class="chev">›</span></div>`).join('');
+}
+
+function alertsHTML(){
+  const a = alertList().slice(0,6);
+  if(!a.length) return '<div class="empty">No active alerts — all monitored tickets are passing.</div>';
+  return a.map(x => `<div class="monitor-card"><div class="monitor-top"><span class="tag ${tagCls(x.status)}">${x.status}</span><span>${esc(x.time)}</span></div><h3>${esc(x.id)}</h3><p>${esc(x.message)}</p><div class="action-box"><span>Recommendation</span><strong>${esc(x.action)}</strong></div><button class="btn primary" data-act="open" data-id="${esc(x.id)}">Open ticket →</button></div>`).join('');
+}
+function streamList(){ return tickets.filter(t => t.state === 'Closed').sort((a,b) => b.time-a.time).slice(0,40); }
+function streamHTML(){
+  return streamList().map(t => { const d = decision(t); return `<div class="row ${t.id===S.streamSel?'selected':''}" data-act="streamSel" data-id="${esc(t.id)}"><span class="id">${esc(t.id)}</span>${typeBadge(t.type)}<span class="cat">${esc(t.shortDescription)}</span><span class="score">${t.compliance}</span><span class="status-chip status-${tagCls(d)}">${d[0]+d.slice(1).toLowerCase()}</span></div>`; }).join('');
+}
+function streamDetailHTML(){
+  const t = byId(S.streamSel) || streamList()[0];
+  if(!t) return '<p class="muted">No tickets yet.</p>';
+  const d = decision(t);
+  return `<div class="detail-header"><div><div class="id">${esc(t.id)} · ${t.type}</div><div class="cat">${esc(t.shortDescription)}</div></div><div class="score-big">${t.compliance}<small>CAFÉ score</small></div></div>
+    <div class="checklist">${RULES[t.type].map(r => { const e = t.evidence[r[0]]; return `<div class="check-item"><div class="check-icon icon-${tagCls(e.status)}">${glyph(e.status)}</div><div class="check-text"><div class="name">${esc(r[0])}<em>${r[2]==='ai'?'AI reasoning':'Rule engine'} · ${e.confidence}%</em></div><div class="rationale">${esc(e.overridden ? e.reason : e.text)}</div></div></div>`; }).join('')}</div>
+    <div class="consistency-note">${consNote(t)}</div>
+    <div class="detail-foot"><button class="btn primary sm" data-act="open" data-id="${esc(t.id)}">Open full audit — ${d} →</button></div>`;
+}
+function vMonitoring(){
+  if(!S.streamSel){ const f = streamList()[0]; S.streamSel = f && f.id; }
+  return `<div class="stack">
+    <div class="page-intro"><div><span class="pill blue">REAL-TIME MONITORING</span><h2>Catch audit risk while work is still happening.</h2><p>The monitoring agent watches active tickets for missing approvals, planned implementation windows and emerging risk — and audits every ticket the moment it closes.</p></div><div class="monitor-badge"><span class="dot"></span>Monitoring 24/7</div></div>
+    <section><div class="section-head"><h3>Proactive alerts — open tickets</h3><small>Before implementation or closure</small></div><div class="monitor-grid" id="alerts">${alertsHTML()}</div></section>
+    <section><div class="section-head"><h3>Live audit stream — tickets audited at closure</h3><button class="btn sm" data-act="pause" id="streamPause">${S.paused ? '▶ Resume stream' : '❚❚ Pause stream'}</button></div>
+      <div class="main-grid">
+        <div class="panel"><div class="panel-head"><span>Live ticket stream</span><span id="streamCount">${tickets.filter(t => t.state==='Closed').length} tickets</span></div><div class="stream" id="stream">${streamHTML()}</div></div>
+        <div class="panel"><div class="panel-head"><span>AI audit detail</span><span id="detailTime">${S.streamSel && byId(S.streamSel) ? timeStr(byId(S.streamSel).time) : '—'}</span></div><div class="detail" id="streamDetail">${streamDetailHTML()}</div></div>
+      </div></section>
+    <section class="card"><h3>How proactive audit works</h3><div class="proactive"><span>Ticket in progress</span><b>→</b><span>Risk signal</span><b>→</b><span>Evidence check</span><b>→</b><span>Owner alert</span><b>→</b><span>Remediate</span></div></section>
+  </div>`;
+}
+
+function queueRows(){
+  let list = tickets.slice();
+  const f = S.queueFilter;
+  if(f === 'ATTN') list = list.filter(t => decision(t) !== 'PASS');
+  else if(f !== 'ALL') list = list.filter(t => band(t) === f);
+  list.sort((a,b) => (a.state==='Closed') - (b.state==='Closed') || b.risk - a.risk || b.time - a.time);
+  return list;
+}
+function queueBodyHTML(){
+  const list = queueRows().slice(0,30);
+  if(!list.length) return '<tr><td colspan="9"><div class="empty">No tickets match this filter.</div></td></tr>';
+  return list.map(t => { const d = decision(t), b = band(t); return `<tr><td><button class="link" data-act="open" data-id="${esc(t.id)}">${esc(t.id)}</button></td><td>${typeBadge(t.type)}</td><td><strong>${esc(t.shortDescription)}</strong><small>${esc(t.assignmentGroup)}</small></td><td><span class="risk-num">${t.risk}</span><span class="tag ${tagCls(b)}">${b}</span></td><td class="mono">${t.compliance}</td><td class="mono">${t.confidence}%</td><td><span class="tag ${tagCls(d)}">${d}</span></td><td><span class="state">${esc(t.state)}</span></td><td><button class="icon-button" data-act="open" data-id="${esc(t.id)}" aria-label="Open ${esc(t.id)}">→</button></td></tr>`; }).join('');
+}
+function queueMetaText(){ const n = queueRows().length; return `Showing ${Math.min(30,n)} of ${n} records`; }
+function vQueue(){
+  const s = stats(), open = tickets.filter(t => t.state !== 'Closed').length;
+  const chips = [['ATTN','Needs attention'],['ALL','All'],['CRITICAL','Critical'],['HIGH','High'],['MEDIUM','Medium'],['LOW','Low']];
+  return `<div class="stack">
+    <div class="page-intro"><div><span class="pill purple">HUMAN-IN-THE-LOOP</span><h2>Audit queue</h2><p>Auditors see the work that requires attention, not every ticket. Flagged closures from the live stream land here automatically.</p></div><div class="muted mono" style="font-size:12px">${s.attention} need attention · ${open} open · ${s.n} audited</div></div>
+    <div class="filterbar">${chips.map(c => `<button class="filter ${S.queueFilter===c[0]?'active':''}" data-act="filter" data-id="${c[0]}">${c[1]}</button>`).join('')}<div class="filter-spacer"></div><span id="queueMeta">${queueMetaText()}</span></div>
+    <div class="card table-card"><div class="table-wrap"><table><thead><tr><th>Ticket</th><th>Type</th><th>Summary</th><th>Risk</th><th>CAFÉ score</th><th>AI confidence</th><th>Decision</th><th>State</th><th></th></tr></thead><tbody id="queueBody">${queueBodyHTML()}</tbody></table></div></div>
+  </div>`;
+}
+
+function ovForm(f){
+  return `<div class="ovform"><select id="ovDecision" aria-label="Override decision">${['PASS','REVIEW','FAIL'].filter(x => x !== f.status).map(x => `<option>${x}</option>`).join('')}</select><input type="text" id="ovNote" placeholder="Reason for override (required)" maxlength="140"><button class="btn primary sm" data-act="ovSubmit" data-id="${esc(f.criterion)}">Record override</button></div>`;
+}
+function vDetail(){
+  const t = byId(S.selected) || byId('CR001992');
+  const d = decision(t), b = band(t), fl = findings(t);
+  const ringColor = t.compliance >= 90 ? 'var(--teal)' : t.compliance >= 70 ? 'var(--amber)' : 'var(--coral)';
+  const canResolve = t.type === 'CR' && t.state !== 'Closed' && t.flags.businessApproval === false;
+  let tabBody = '';
+  if(S.tab === 'findings'){
+    tabBody = `<section class="card table-card"><div class="table-wrap"><table><thead><tr><th>Criterion</th><th>Requirement</th><th>Method</th><th>Decision</th><th>Confidence</th></tr></thead><tbody>${RULES[t.type].map(r => { const e = t.evidence[r[0]]; return `<tr><td><strong>${esc(r[0])}</strong></td><td>${esc(r[1])}</td><td><span class="tag medium">${r[2]==='ai'?'AI reasoning':'Rule engine'}</span></td><td><span class="tag ${tagCls(e.status)}">${e.status}</span></td><td class="mono">${e.confidence}%</td></tr>`; }).join('')}</tbody></table></div></section>`;
+  } else if(S.tab === 'evidence'){
+    tabBody = `<section class="card"><div class="evidence-grid">${RULES[t.type].map(r => { const e = t.evidence[r[0]]; return `<div class="evidence-card"><div class="evidence-head"><strong>${esc(r[0])}</strong><span class="tag ${tagCls(e.status)}">${e.status}</span></div><p>${esc(e.text)}</p>${e.overridden ? `<p style="margin-top:6px"><b>${esc(e.reason)}</b></p>` : ''}<div class="evidence-meta"><span>Source · ${esc(e.source)}</span><span>Confidence · ${e.confidence}%</span></div></div>`; }).join('')}</div></section>`;
+  } else if(S.tab === 'ticket'){
+    const items = [['Priority',t.priority],['Assignment group',t.assignmentGroup],['Owner',t.owner],['State',t.state],['Target',t.target],['SLA',t.sla],['Business approval',yn(t.flags.businessApproval)],['Technical approval',yn(t.flags.technicalApproval)],['Rollback plan',yn(t.flags.rollbackPlan)],['Testing',yn(t.flags.testing)]];
+    tabBody = `<section class="card ticket-data"><div class="data-grid">${items.map(x => `<div><span>${x[0]}</span><strong>${esc(x[1])}</strong></div>`).join('')}</div><p class="muted">${esc(t.description)}</p><h4>Work notes</h4>${t.workNotes.map(n => `<div class="note">${esc(n)}</div>`).join('')}<h4>Approvals on record</h4>${t.approvals.length ? `<div class="chips">${t.approvals.map(a => `<span>${esc(a)}</span>`).join('')}</div>` : '<p class="muted">None recorded.</p>'}</section>`;
+  } else {
+    tabBody = `<section class="card">${t.trail.length ? t.trail.map(x => `<div class="trail-item"><strong>${esc(x.who)}</strong> overrode <strong>${esc(x.criterion)}</strong>: ${x.from} → ${x.to}<div class="muted">${esc(x.note)}</div><small>${x.when.toISOString()}</small></div>`).join('') : '<div class="empty">No human overrides recorded for this ticket yet.</div>'}</section>`;
+  }
+  return `<div class="stack">
+    <div class="detail-top"><div>
+      <button class="link" data-act="nav" data-page="queue">← Back to queue</button>
+      <div class="detail-title"><span class="type-chip large type-${t.type.toLowerCase()}">${t.type}</span><h3>${esc(t.id)}</h3><span class="tag ${tagCls(b)}">${b} RISK</span><span class="tag ${tagCls(d)}">${d}</span></div>
+      <p>${esc(t.shortDescription)} · ${esc(t.assignmentGroup)} · ${esc(t.state)}</p></div>
+      <div class="detail-actions"><select data-change="selectTicket" aria-label="Switch ticket">${ticketOptions(t.id)}</select><button class="btn" data-act="askFromDetail">✦ Ask Copilot</button><button class="btn" data-act="rerun">↻ Re-run audit</button>${canResolve ? '<button class="btn primary" data-act="approve">Resolve approval gap</button>' : ''}</div></div>
+    <div id="runbar"></div>
+    <div class="detail-grid">
+      <section class="card"><div class="ring" style="background:conic-gradient(${ringColor} ${t.compliance*3.6}deg, var(--border) 0deg)"><div><strong>${t.compliance}</strong><span>CAFÉ score</span></div></div>
+        <div class="mini-stats"><div><span>Risk</span><strong>${t.risk}/100</strong></div><div><span>Confidence</span><strong>${t.confidence}%</strong></div><div><span>SLA</span><strong>${esc(t.sla)}</strong></div></div></section>
+      <section class="card"><div class="card-head"><div><h3>Explainable AI</h3><p>Every result is tied to a rule, evidence source, confidence and recommendation.</p></div></div>
+        ${fl.length ? fl.map(f => `<div class="finding"><div class="finding-icon ${tagCls(f.status)}">${glyph(f.status)}</div><div class="finding-body"><div class="finding-title"><strong>${esc(f.criterion)}</strong><span class="tag ${tagCls(f.status)}">${f.status}</span><span class="muted mono">${f.confidence}%</span>${f.overridden ? '<span class="tag medium">HUMAN OVERRIDE</span>' : ''}</div><p>${esc(f.reason)}</p>${f.overridden ? '' : `<button class="link sm" data-act="ovOpen" data-id="${esc(f.criterion)}">${S.overrideOpen===f.criterion ? 'Cancel override' : 'Override this finding'}</button>`}${S.overrideOpen===f.criterion ? ovForm(f) : ''}</div></div>`).join('') : '<div class="empty">No open findings. All evaluated criteria are currently passing.</div>'}
+        <div class="consistency-note">${consNote(t)}</div></section>
+    </div>
+    <div class="tabs" role="tablist">${[['findings','Audit criteria'],['evidence','Evidence viewer'],['ticket','Ticket data'],['trail',`Audit trail (${t.trail.length})`]].map(x => `<button role="tab" class="${S.tab===x[0]?'active':''}" data-act="tab" data-id="${x[0]}">${x[1]}</button>`).join('')}</div>
+    ${tabBody}
+    <div class="human-banner"><div><span class="pill gold">HUMAN OVERSIGHT</span><strong>AI recommends. Auditors remain in control of governance decisions.</strong><p>Overrides are written to the audit trail and become feedback for rules, prompts, retrieval and confidence thresholds.</p></div><div class="mini-flow"><span>AI decision</span><b>→</b><span>Auditor review</span><b>→</b><span>Feedback store</span></div></div>
+  </div>`;
+}
+
+/* ---------- copilot ---------- */
+const COPILOT_SOURCES = ['Audit Rules','Ticket Evidence','Historical Audit Patterns'];
+const SUGGESTIONS = ['Why did this ticket fail?','What evidence supports this finding?','Show me all tickets missing approval.','Which audit rules caused the score to drop?','Find similar tickets','Would human auditors agree?','Give me a summary for management.'];
+function copilotAnswer(t, question){
+  const q = question.toLowerCase();
+  const fl = findings(t).filter(x => x.status !== 'PASS');
+  if(/(all|which|list|show).*(ticket).*(approval)|missing approval|without approval/.test(q)){
+    const hits = tickets.filter(x => ['Business approval','Technical approval','Authorization'].some(c => x.evidence[c] && x.evidence[c].status !== 'PASS')).sort((a,b) => b.risk-a.risk);
+    if(!hits.length) return ['No tickets currently have a missing or unconfirmed approval.'];
+    return [`${hits.length} ticket${hits.length>1?'s have':' has'} a missing or unconfirmed approval. Highest risk first:`, ...hits.slice(0,6).map(x => `• ${x.id} (${x.type}, ${band(x)} risk, ${x.state}) — ${x.shortDescription}`), hits.length>6 ? `…and ${hits.length-6} more in the Audit Queue.` : ''].filter(Boolean);
+  }
+  if(q.includes('why') && (q.includes('fail') || q.includes('risk'))){
+    if(!fl.length) return [`${t.id} has no failing criteria. All ${RULES[t.type].length} evaluated criteria pass, with CAFÉ score ${t.compliance} and ${band(t)} risk.`];
+    return [`${t.id} is currently ${band(t)} risk with a CAFÉ score of ${t.compliance}.`, ...fl.map(f => `• ${f.criterion} (${f.status}, ${f.confidence}% confidence): ${f.reason}`)];
+  }
+  if(q.includes('evidence')){
+    if(!fl.length) return [`All available evidence for ${t.id} is passing — ${RULES[t.type].length} criteria checked against ticket fields, work notes and approval records.`];
+    return [`Relevant non-pass evidence for ${t.id}:`, ...fl.map(f => { const e = t.evidence[f.criterion]; return `• ${f.criterion} — ${e.text} Source: ${e.source} (${e.confidence}% confidence).`; })];
+  }
+  if(q.includes('similar')){
+    const crit = fl.map(f => f.criterion);
+    const hits = tickets.filter(x => x.id !== t.id && x.type === t.type && (crit.length ? findings(x).some(f => f.status !== 'PASS' && crit.includes(f.criterion)) : decision(x) === 'PASS')).slice(0,4);
+    if(!hits.length) return [`No comparable ${t.type} tickets found in the current dataset yet.`];
+    return [`Closest comparators to ${t.id} (same ticket type${crit.length ? ', overlapping failed criteria' : ''}):`, ...hits.map(x => `• ${x.id} — ${x.shortDescription} · ${decision(x)}${crit.length ? ' · ' + findings(x).filter(f => f.status !== 'PASS' && crit.includes(f.criterion)).map(f => f.criterion).join(', ') : ''}`), 'Historically, these patterns most often involve missing approval, rollback or validation evidence.'];
+  }
+  if(q.includes('rule') || q.includes('score') || q.includes('drop')){
+    if(!fl.length) return [`No rules are reducing the score for ${t.id}. Risk is ${t.risk}/100 and SLA is ${t.sla.toLowerCase()}.`];
+    return [`Score drivers for ${t.id}:`, ...fl.map(f => `• ${f.criterion} — ${f.method==='ai' ? 'AI reasoning' : 'Rule engine'} (${f.severity} severity)`), `Combined with risk ${t.risk}/100 and SLA status “${t.sla}”, this gives CAFÉ score ${t.compliance}.`];
+  }
+  if(q.includes('agree') || q.includes('auditor') || q.includes('consisten') || q.includes('human')){
+    const c = cons(t);
+    return [c.d === 'PASS' ? `Yes — both historical auditors scored tickets matching this pattern the same way ${c.pct}% of the time, so ${t.id} was resolved automatically.` : c.d === 'REVIEW' ? `Possibly not. Historical auditors disagreed on ${c.pct}% of tickets like ${t.id}, which is why it is routed to human review rather than auto-scored.` : `Very likely. Historical auditors reached the same FAIL outcome on ${c.pct}% of similar tickets; ${t.id} is flagged for confirmation and remediation.`];
+  }
+  if(q.includes('summary') || q.includes('management')){
+    return [`Management summary: ${t.id} (${t.type}) is ${band(t)} risk with a CAFÉ score of ${t.compliance} and ${fl.filter(f => f.status!=='PASS').length} open finding(s). Decision: ${decision(t)}.`, fl.length ? `Recommended action: ${ACTION[fl[0].criterion] || 'auditor review'}.` : 'No action required.'];
+  }
+  return ['I can explain findings, show evidence, compare similar tickets, identify score drivers, list tickets missing approval, or write a management summary.'];
+}
+function chatHTML(){
+  const intro = `<div class="msg"><div class="chat-avatar">A</div><div class="bubble"><strong>AuditIQ</strong><p>Ask me why a ticket failed, where the evidence came from, which rules drove the score, or how to summarize the audit.</p></div></div>`;
+  const msgs = S.chat.map(m => m.role === 'user'
+    ? `<div class="msg user"><div class="chat-avatar">You</div><div class="bubble">${esc(m.text)}</div></div>`
+    : `<div class="msg"><div class="chat-avatar">A</div><div class="bubble"><strong>AuditIQ</strong>${m.lines.map(l => `<p>${esc(l)}</p>`).join('')}<div class="sources">${COPILOT_SOURCES.map(s => `<span>${s}</span>`).join('')}</div></div></div>`).join('');
+  const typing = S.pending ? `<div class="msg"><div class="chat-avatar">A</div><div class="bubble typing"><span></span><span></span><span></span></div></div>` : '';
+  return intro + msgs + typing;
+}
+function vCopilot(){
+  const t = byId(S.cpTicket) || byId('CR001992');
+  return `<div class="copilot-layout"><section class="card">
+    <div class="copilot-head"><div><span class="pill purple">AUDITOR COPILOT</span><h2>Ask AuditIQ</h2><p>Evidence-backed explanations, grounded in audit rules and ticket evidence.</p></div><select data-change="cpTicket" aria-label="Ticket to discuss">${ticketOptions(t.id)}</select></div>
+    <div class="suggestions">${SUGGESTIONS.map(s => `<button data-act="cpSug" data-q="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+    <div class="chat" id="chat">${chatHTML()}</div>
+    <div class="composer"><input type="text" id="cpInput" placeholder="Ask about ${esc(t.id)}…" autocomplete="off"><button class="btn primary" data-act="cpAsk">Ask AuditIQ</button></div></section>
+    <aside class="card copilot-side"><h3>Agent chain</h3>${['Ticket Intelligence','Evidence Extraction','Audit Rules','AI Reasoning','Risk Scoring','Continuous Monitoring'].map((x,i) => `<div class="agent-step"><span>${i+1}</span><div><strong>${x}</strong><small>ready</small></div></div>`).join('')}</aside></div>`;
+}
+
+/* ---------- QC / analytics / config ---------- */
+const QC = {variance:8.4, disputed:12, agreement:92.6, exceptions:7, auditors:[{name:'A. Rahman',audits:126,agreement:96,variance:4.1},{name:'J. Lim',audits:118,agreement:94,variance:6.2},{name:'S. Tan',audits:101,agreement:89,variance:11.8},{name:'M. Lee',audits:132,agreement:93,variance:7.0}], focus:['Low-confidence AI decisions','Disputed findings','Unusual scoring patterns','Potential auditor inconsistencies']};
+const AN = {
+  ticketType:[['INC',96],['SR',94],['CR',88]],
+  department:[['Infrastructure',96],['Applications',94],['Security',91],['Network',89],['Service Desk',97]],
+  failures:[['Missing approval',31],['Incomplete documentation',27],['Incorrect categorization',16],['SLA violations',14],['Missing validation',12]],
+  trend:[['Apr',88.1],['May',89.4],['Jun',91.2],['Jul',92.1],['Aug',93.0],['Sep',94.2]]
+};
+function vQC(){
+  return `<div class="stack">
+    <div class="page-intro"><div><span class="pill gold">QC INTELLIGENCE</span><h2>Review exceptions, not everything.</h2><p>QC is surfaced around auditor variance, disputed decisions, low-confidence AI results and unusual scoring patterns.</p></div></div>
+    <div class="kpi-row">${kpi('Auditor variance', QC.variance+'%', 'Target: lower', 'warn')}${kpi('Disputed findings', QC.disputed, 'Needs QC', 'mute')}${kpi('AI-human agreement', QC.agreement+'%', 'Mock demo metric')}${kpi('QC exceptions', QC.exceptions, 'Priority review', 'warn')}</div>
+    <div class="grid2">
+      <section class="card table-card"><div class="card-head"><div><h3>Auditor consistency</h3><p>Illustrative sample for prototype review.</p></div></div><div class="table-wrap"><table><thead><tr><th>Auditor</th><th>Audits</th><th>Agreement</th><th>Variance</th><th>QC focus</th></tr></thead><tbody>${QC.auditors.map(a => `<tr><td><strong>${a.name}</strong></td><td class="mono">${a.audits}</td><td class="mono">${a.agreement}%</td><td class="mono">${a.variance}%</td><td><span class="tag ${a.variance>10?'high':'low'}">${a.variance>10?'REVIEW':'STABLE'}</span></td></tr>`).join('')}</tbody></table></div></section>
+      <section class="card"><div class="card-head"><div><h3>AI vs historical auditors</h3><p>Average score by category</p></div></div><div class="canvas-box"><canvas id="cConsistency" role="img" aria-label="Bar chart comparing AI audit scores against two human auditors across ticket categories"></canvas></div>
+        <div class="legend"><span><span class="sw" style="background:var(--blue)"></span>AuditIQ (AI)</span><span><span class="sw" style="background:var(--text-secondary)"></span>Auditor A</span><span><span class="sw" style="background:var(--text-muted)"></span>Auditor B</span></div></section>
+    </div>
+    <section class="card"><h3>QC focus queue</h3><div class="focus-grid">${QC.focus.map(x => `<div class="focus-card"><span>!</span><strong>${x}</strong><small>Surface for targeted QC</small></div>`).join('')}</div></section>
+  </div>`;
+}
+function bars(rows, scale){ return rows.map(x => `<div class="bar-row"><span>${x[0]}</span><div><i style="width:${scale ? x[1]/scale*100 : x[1]}%"></i></div><b>${x[1]}%</b></div>`).join(''); }
+function vAnalytics(){
+  return `<div class="stack">
+    <div class="page-intro"><div><span class="pill green">MANAGEMENT INSIGHTS</span><h2>Turn audit outcomes into operational intelligence.</h2><p>Explore compliance by ticket type, department and recurring failure category.</p></div></div>
+    <div class="grid2">
+      <section class="card"><div class="card-head"><div><h3>Compliance trend</h3><p>Mock monthly trajectory.</p></div></div><div class="canvas-box"><canvas id="cTrend" role="img" aria-label="Line chart of monthly compliance rising from 88.1 percent in April to 94.2 percent in September"></canvas></div></section>
+      <section class="card"><div class="card-head"><div><h3>Top audit failures</h3><p>Illustrative distribution.</p></div></div>${bars(AN.failures, 31)}</section>
+    </div>
+    <div class="grid2"><section class="card"><h3>Compliance by ticket type</h3>${bars(AN.ticketType)}</section><section class="card"><h3>Compliance by department</h3>${bars(AN.department)}</section></div>
+  </div>`;
+}
+function vConfig(){
+  const dist = ['CRITICAL','HIGH','MEDIUM','LOW'].map(b => `<span class="tag ${tagCls(b)}">${b} ${tickets.filter(t => band(t)===b).length}</span>`).join('');
+  const fields = [['auto','Auto decision confidence'],['recommend','AI recommendation confidence'],['critical','Critical risk threshold'],['high','High risk threshold'],['sampling','Human sampling %']];
+  return `<div class="stack">
+    <div class="page-intro"><div><span class="pill blue">GOVERNANCE ADMIN</span><h2>Audit configuration</h2><p>Enterprise policy remains above AI interpretation. Configure thresholds, rules and sampling for the prototype.</p></div></div>
+    <section class="card"><div class="card-head"><div><h3>AI confidence framework</h3><p>Change a risk threshold and every ticket's risk band recalculates immediately.</p></div><button class="btn sm" data-act="cfgReset">Reset defaults</button></div>
+      <div class="config-grid">${fields.map(x => `<label>${x[1]}<div class="input-row"><input type="number" min="0" max="100" value="${CFG[x[0]]}" data-change="cfg" data-key="${x[0]}"><span>${['critical','high'].includes(x[0]) ? 'risk' : '%'}</span></div></label>`).join('')}</div>
+      <div class="dist"><span>Current distribution:</span>${dist}</div>
+      <p class="cfg-note">Risk thresholds apply immediately across the prototype. Confidence and sampling values are illustrative in this build.</p></section>
+    <section class="card"><h3>Governance hierarchy</h3><div class="governance-flow"><span>Enterprise Policy</span><b>↓</b><span>Rules Engine</span><b>↓</b><span>AI Interpretation</span><b>↓</b><span>Evidence</span><b>↓</b><span>Human Oversight</span></div></section>
+    <section class="card"><h3>Supported audit criteria</h3><div class="rule-cards">${Object.entries(RULES).map(([type,rules]) => `<div class="rule-card"><div class="rule-type">${type}</div>${rules.map(r => `<div class="rule-line"><span>${r[0]}</span><small>${r[2]==='ai'?'AI reasoning':'Rule engine'}</small></div>`).join('')}</div>`).join('')}</div></section>
+  </div>`;
+}
+
+/* ---------- charts ---------- */
+function destroyCharts(){ Object.keys(charts).forEach(k => { charts[k].destroy(); delete charts[k]; }); }
+function mkChart(id, cfg){ const c = document.getElementById(id); if(!c || !window.Chart) return; charts[id] = new Chart(c, cfg); }
+function drawCharts(){
+  if(!window.Chart) return;
+  Chart.defaults.font.family = cssv('--font-sans') || 'sans-serif';
+  const tx = cssv('--text-secondary'), mu = cssv('--text-muted'), grid = cssv('--border-soft'), blue = cssv('--blue'), teal = cssv('--teal'), amber = cssv('--amber');
+  const yAxis = (min,max) => ({min, max, ticks:{color:tx, font:{size:11}}, grid:{color:grid}});
+  const xAxis = extra => ({ticks:Object.assign({color:tx, font:{size:11}}, extra||{}), grid:{display:false}});
+  mkChart('cConsistency', {type:'bar', data:{labels:['Incidents','Service req.','Change req.'], datasets:[
+    {label:'AuditIQ (AI)', data:[88,91,86], backgroundColor:blue, borderRadius:3, maxBarThickness:26},
+    {label:'Auditor A', data:[94,82,90], backgroundColor:tx, borderRadius:3, maxBarThickness:26},
+    {label:'Auditor B', data:[79,89,74], backgroundColor:mu, borderRadius:3, maxBarThickness:26}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c => c.dataset.label + ': ' + c.parsed.y}}}, scales:{y:yAxis(0,100), x:xAxis()}}});
+  const days = Array.from({length:14}, (_,i) => { const d = new Date(); d.setDate(d.getDate() - (13-i)); return d.toLocaleDateString([], {month:'short', day:'numeric'}); });
+  mkChart('cCoverage', {type:'line', data:{labels:days, datasets:[
+    {label:'Coverage %', data:[9,10,8,11,34,58,72,85,91,96,98,99,100,100], borderColor:teal, backgroundColor:teal+'18', fill:true, tension:.3, pointRadius:0, borderWidth:2},
+    {label:'Pass rate %', data:[81,79,83,80,82,84,85,83,87,88,86,89,90,91], borderColor:amber, backgroundColor:'transparent', tension:.3, pointRadius:0, borderWidth:2}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:yAxis(0,100), x:xAxis({maxRotation:0, autoSkip:true, maxTicksLimit:7})}}});
+  mkChart('cTrend', {type:'line', data:{labels:AN.trend.map(x => x[0]), datasets:[{label:'Compliance %', data:AN.trend.map(x => x[1]), borderColor:blue, backgroundColor:blue+'18', fill:true, tension:.3, pointRadius:3, pointBackgroundColor:blue, borderWidth:2}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:yAxis(85,100), x:xAxis()}}});
+}
+
+/* ---------- render / chrome ---------- */
+const VIEWS = {dashboard:vDashboard, monitoring:vMonitoring, queue:vQueue, detail:vDetail, copilot:vCopilot, qc:vQC, analytics:vAnalytics, config:vConfig};
+function updateChrome(){
+  const s = stats();
+  $('#nav').innerHTML = NAV.map(([id,label,icon]) => {
+    const badge = id==='queue' && s.attention ? `<span class="nav-badge">${s.attention}</span>` : id==='monitoring' && alertList().filter(a => a.status==='CRITICAL'||a.status==='HIGH').length ? `<span class="nav-badge">${alertList().filter(a => a.status==='CRITICAL'||a.status==='HIGH').length}</span>` : '';
+    return `<button class="nav-item ${S.page===id?'active':''}" data-act="nav" data-page="${id}"${S.page===id?' aria-current="page"':''}><span class="nav-icon">${icon}</span><span>${label}</span>${badge}</button>`;
+  }).join('');
+  const cur = NAV.find(n => n[0] === S.page);
+  $('#title').textContent = cur[1];
+  $('#eyebrow').textContent = 'AUDIT GOVERNANCE / ' + cur[1].toUpperCase();
+  $('#livePill').innerHTML = `<span class="dot ${S.paused?'off':''}"></span>${S.paused ? 'Paused — click to resume' : 'Live — auditing closed tickets'}`;
+  const dark = document.documentElement.dataset.theme === 'dark';
+  $('#themeBtn').textContent = dark ? '☀ Light' : '☾ Dark';
+}
+function render(){
+  destroyCharts();
+  $('#view').innerHTML = VIEWS[S.page]();
+  updateChrome();
+  drawCharts();
+  if(S.page === 'copilot'){ const c = $('#chat'); if(c) c.scrollTop = c.scrollHeight; }
+}
+function go(page){ S.page = page; S.overrideOpen = null; render(); window.scrollTo(0,0); }
+let toastT;
+function toast(msg){ const el = $('#toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 3600); }
+
+/* ---------- live stream ---------- */
+function addTicket(time, force){ const t = genTicket(time, force); tickets.unshift(t); return t; }
+function onLive(){
+  updateChrome();
+  if(S.page === 'dashboard'){ $('#kpis').innerHTML = kpisHTML(); $('#dashAlerts').innerHTML = dashAlertsHTML(); }
+  else if(S.page === 'monitoring'){ $('#stream').innerHTML = streamHTML(); $('#streamCount').textContent = tickets.filter(t => t.state==='Closed').length + ' tickets'; $('#alerts').innerHTML = alertsHTML(); }
+  else if(S.page === 'queue'){ $('#queueBody').innerHTML = queueBodyHTML(); $('#queueMeta').textContent = queueMetaText(); }
+}
+function tick(){ if(S.paused) return; addTicket(); onLive(); }
+
+/* ---------- actions ---------- */
+function runAudit(){
+  const t = byId(S.selected), bar = $('#runbar');
+  if(!t || !bar || S.running) return;
+  S.running = true;
+  const steps = ['Ticket Intelligence','Evidence Extraction','Audit Rules','AI Reasoning','Risk Scoring'];
+  bar.innerHTML = `<div class="runbar">${steps.map((s,i) => `<span class="rstep" data-i="${i}">${s}</span>`).join('<b>→</b>')}</div>`;
+  steps.forEach((s,i) => setTimeout(() => { const n = bar.querySelector(`[data-i="${i}"]`); if(n) n.classList.add('on'); }, 330*(i+1)));
+  setTimeout(() => { S.running = false; toast(`Audit re-evaluated — ${decision(t)}, CAFÉ score ${t.compliance}, risk ${t.risk}/100.`); if(S.page==='detail' && S.selected===t.id) render(); }, 330*(steps.length+1)+120);
+}
+function ask(q){
+  q = (q || '').trim(); if(!q || S.pending) return;
+  const t = byId(S.cpTicket);
+  S.chat.push({role:'user', text:q}); S.pending = true; render();
+  setTimeout(() => { S.chat.push({role:'ai', lines:copilotAnswer(t, q)}); S.pending = false; if(S.page === 'copilot') render(); }, 520);
+}
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if(!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  switch(act){
+    case 'nav': go(el.dataset.page); break;
+    case 'open': S.selected = id; S.tab = 'findings'; S.overrideOpen = null; S.page = 'detail'; render(); window.scrollTo(0,0); break;
+    case 'streamSel': S.streamSel = id; $('#stream').innerHTML = streamHTML(); $('#streamDetail').innerHTML = streamDetailHTML(); $('#detailTime').textContent = timeStr(byId(id).time); break;
+    case 'pause': S.paused = !S.paused; updateChrome(); { const b = $('#streamPause'); if(b) b.textContent = S.paused ? '▶ Resume stream' : '❚❚ Pause stream'; } break;
+    case 'theme': document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; render(); break;
+    case 'filter': S.queueFilter = id; render(); break;
+    case 'tab': S.tab = id; render(); break;
+    case 'approve': { const t = byId(S.selected); resolveApproval(t); toast(`Business approval received — ${t.id} is now ${band(t)} risk, CAFÉ score ${t.compliance}.`); render(); break; }
+    case 'rerun': runAudit(); break;
+    case 'ovOpen': S.overrideOpen = S.overrideOpen === id ? null : id; render(); break;
+    case 'ovSubmit': {
+      const note = ($('#ovNote').value || '').trim();
+      if(!note){ toast('Add a short reason so the override is recorded in the audit trail.'); $('#ovNote').focus(); break; }
+      applyOverride(byId(S.selected), id, $('#ovDecision').value, note); S.overrideOpen = null; S.tab = 'trail';
+      toast('Override recorded — written to the audit trail and feedback store.'); render(); break;
+    }
+    case 'askFromDetail': S.cpTicket = S.selected; go('copilot'); break;
+    case 'cpSug': ask(el.dataset.q); break;
+    case 'cpAsk': { const i = $('#cpInput'); const v = i.value; i.value = ''; ask(v); break; }
+    case 'cfgReset': CFG = {...CFG_DEFAULT}; toast('Defaults restored — risk bands recalculated.'); render(); break;
+  }
+});
+document.addEventListener('change', e => {
+  const el = e.target.closest('[data-change]'); if(!el) return;
+  const k = el.dataset.change;
+  if(k === 'selectTicket'){ S.selected = el.value; S.tab = 'findings'; S.overrideOpen = null; render(); }
+  else if(k === 'cpTicket'){ S.cpTicket = el.value; render(); }
+  else if(k === 'cfg'){
+    const key = el.dataset.key; let v = clamp(Number(el.value) || 0, 0, 100);
+    if(key === 'critical' && v <= CFG.high) v = Math.min(100, CFG.high + 1);
+    if(key === 'high' && v >= CFG.critical) v = Math.max(MEDIUM + 1, CFG.critical - 1);
+    if(key === 'high' && v <= MEDIUM) v = MEDIUM + 1;
+    CFG[key] = v;
+    if(key === 'critical' || key === 'high') toast('Risk thresholds applied — every ticket band recalculated.'); else toast('Setting saved for this demo session.');
+    render();
+  }
+});
+document.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.id === 'cpInput'){ const v = e.target.value; e.target.value = ''; ask(v); } if(e.key === 'Enter' && e.target.id === 'ovNote'){ const b = document.querySelector('[data-act="ovSubmit"]'); if(b) b.click(); } });
+
+/* ---------- boot ---------- */
+(function boot(){
+  // Pre-populate the live stream: 14 recent closures, three of them guaranteed to be flagged for review
+  let ms = Date.now() - 14*45000;
+  const force = {2:'REVIEW', 6:'FAIL', 11:'REVIEW'};
+  for(let i = 0; i < 14; i++){ ms += ri(30,55)*1000; addTicket(new Date(ms), force[i]); }
+  S.streamSel = tickets[0].id;
+  render();
+  setInterval(tick, 3800);
+})();
+</script>
+</body>
+</html>
